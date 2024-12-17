@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color Psychology Quiz</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f0f0;
+        transition: background-color 1s ease;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      .color-box {
+        width: 150px;
+        height: 150px;
+        margin: 20px auto;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+
+      .color-box:hover {
+        transform: scale(1.05);
+      }
+
+      .emotions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #333;
+        color: black;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      button:hover {
+        background-color: #555;
+      }
+
+      .emotion-btn {
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .emotion-btn:hover {
+        background-color: #f0f0f0;
+        transform: translateY(-2px);
+      }
+
+      .emotion-btn.selected {
+        background-color: #e0e0e0;
+        border-color: #333;
+      }
+
+      .next-btn {
+        color: white;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #f8f8f8;
+        display: none;
+      }
+
+      .progress {
+        text-align: center;
+        margin: 20px 0;
+        color: #666;
+      }
+
+      .nav {
+        display: flex;
+        justify-content: center;
+        gap: 8rem;
+      }
+
+      .nav-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        text-decoration: none;
+      }
+
+      .nav-link:hover {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Color Psychology Quiz</h1>
+      <div id="quiz-container">
+        <div class="color-box" id="color-display"></div>
+        <div class="progress">Color <span id="current-color">1</span>/5</div>
+        <div class="emotions" id="emotions-grid">
+          <button class="emotion-btn">Calm</button>
+          <button class="emotion-btn">Energetic</button>
+          <button class="emotion-btn">Happy</button>
+          <button class="emotion-btn">Mysterious</button>
+          <button class="emotion-btn">Peaceful</button>
+          <button class="emotion-btn">Excited</button>
+          <button class="emotion-btn">Focused</button>
+          <button class="emotion-btn">Creative</button>
+        </div>
+        <button class="next-btn" id="next-btn" style="display: none">
+          Next Color
+        </button>
+      </div>
+      <div id="result" class="result"></div>
+      <div class="nav">
+        <a href="from-scratch.html" class="nav-link">ΓåÉ Back to EV Page</a>
+        <a href="ai-collab.html" class="nav-link">Restart?</a>
+      </div>
+    </div>
+
+    <script>
+      const colors = [
+        { hex: "#FF6B6B", name: "Coral Red" },
+        { hex: "#4ECDC4", name: "Turquoise" },
+        { hex: "#FFD93D", name: "Yellow" },
+        { hex: "#95A5A6", name: "Gray" },
+        { hex: "#6C5B7B", name: "Purple" },
+      ];
+
+      const personalityTraits = {
+        "Coral Red": {
+          positive: "passionate and energetic",
+          negative: "can be impulsive",
+        },
+        Turquoise: {
+          positive: "creative and calming",
+          negative: "sometimes overthinks",
+        },
+        Yellow: {
+          positive: "optimistic and cheerful",
+          negative: "can be overwhelming",
+        },
+        Gray: {
+          positive: "balanced and neutral",
+          negative: "might avoid taking sides",
+        },
+        Purple: {
+          positive: "imaginative and spiritual",
+          negative: "can be unrealistic",
+        },
+      };
+
+      let currentColorIndex = 0;
+      let userResponses = [];
+
+      const colorDisplay = document.getElementById("color-display");
+      const emotionsGrid = document.getElementById("emotions-grid");
+      const nextButton = document.getElementById("next-btn");
+      const resultDiv = document.getElementById("result");
+      const currentColorSpan = document.getElementById("current-color");
+
+      function showColor() {
+        const color = colors[currentColorIndex];
+        colorDisplay.style.backgroundColor = color.hex;
+        document.body.style.backgroundColor = color.hex + "20";
+        currentColorSpan.textContent = currentColorIndex + 1;
+
+        // Reset emotion selections
+        document.querySelectorAll(".emotion-btn").forEach((btn) => {
+          btn.classList.remove("selected");
+        });
+        nextButton.style.display = "none";
+      }
+
+      function analyzeResponses() {
+        let analysis = "Based on your color responses, you tend to be ";
+
+        // Find most selected emotions
+        const emotionCounts = {};
+        userResponses.forEach((response) => {
+          emotionCounts[response.emotion] =
+            (emotionCounts[response.emotion] || 0) + 1;
+        });
+
+        const dominantEmotions = Object.entries(emotionCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 2)
+          .map((entry) => entry[0]);
+
+        // Add personality traits based on color preferences
+        const colorTraits = userResponses.map(
+          (response) => personalityTraits[colors[response.colorIndex].name],
+        );
+
+        analysis += dominantEmotions.join(" and ") + ". ";
+        analysis +=
+          "Your color choices suggest you are " +
+          colorTraits[0].positive +
+          ", though " +
+          colorTraits[0].negative +
+          ". ";
+        analysis +=
+          "You also show traits of being " + colorTraits[1].positive + ".";
+
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = `<h3>Your Color Psychology Profile:</h3><p>${analysis}</p>`;
+      }
+
+      emotionsGrid.addEventListener("click", (e) => {
+        if (e.target.classList.contains("emotion-btn")) {
+          // Toggle selection
+          document.querySelectorAll(".emotion-btn").forEach((btn) => {
+            btn.classList.remove("selected");
+          });
+          e.target.classList.add("selected");
+
+          // Show next button
+          nextButton.style.display = "block";
+        }
+      });
+
+      nextButton.addEventListener("click", () => {
+        const selectedEmotion = document.querySelector(".emotion-btn.selected");
+        if (selectedEmotion) {
+          userResponses.push({
+            colorIndex: currentColorIndex,
+            emotion: selectedEmotion.textContent,
+          });
+
+          currentColorIndex++;
+
+          if (currentColorIndex < colors.length) {
+            showColor();
+          } else {
+            document.getElementById("quiz-container").style.display = "none";
+            analyzeResponses();
+          }
+        }
+      });
+
+      showColor();
+    </script>
+  </body>
+</html>
